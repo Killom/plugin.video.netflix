@@ -156,10 +156,12 @@ class Directory:
         menu_data = G.MAIN_MENU_ITEMS.get(pathitems[1])
         if not menu_data:  # Dynamic menus
             menu_data = G.LOCAL_DB.get_value(pathitems[1], table=TABLE_MENU_DATA, data_type=dict)
+        list_id = pathitems[2] if len(pathitems) > 2 else pathitems[1]
+        is_dynamic_id = len(pathitems) > 2 and not G.is_known_menu_context(list_id)
         call_args = {
-            'list_id': pathitems[2],
+            'list_id': list_id,
             'menu_data': menu_data,
-            'is_dynamic_id': not G.is_known_menu_context(pathitems[2])
+            'is_dynamic_id': is_dynamic_id
         }
         dir_items, extra_data = common.make_call('get_video_list', call_args)
 
@@ -180,7 +182,7 @@ class Directory:
             'menu_data': menu_data,
             'sub_genre_id': self.params.get('sub_genre_id'),  # Used to show the sub-genre folder when sub-genres exists
             'perpetual_range_start': self.perpetual_range_start,
-            'is_dynamic_id': not G.is_known_menu_context(pathitems[2])
+            'is_dynamic_id': len(pathitems) > 2 and not G.is_known_menu_context(pathitems[2])
         }
         dir_items, extra_data = common.make_call('get_video_list_sorted', call_args)
         sort_type = 'sort_nothing'
