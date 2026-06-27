@@ -1,3 +1,18 @@
+v1.24.1 (2026-06-27)
+- New experimental merge, personal testing done only for Pi4 @ latest OSMC
+- Should fix playback issues than can sometimes occur, like not starting at all or sound-only playback (jankofron)  
+  See https://github.com/CastagnaIT/plugin.video.netflix/pull/1791
+- Should fix 'Website parsing error: unable to extract reactContext.' (biocoder-frodo)  
+  See https://github.com/CastagnaIT/plugin.video.netflix/pull/1727
+- Should fix 'Profile switching' at-least partially, (Krumbthi)  
+  See https://github.com/CastagnaIT/plugin.video.netflix/pull/1783
+- Fixes plugin no longer functional due to even more API changes by Netflix (go-vegan)  
+  Using patch 8, see https://github.com/CastagnaIT/plugin.video.netflix/issues/1792  
+  NB. That patch also contains the work from the others mentioned above.
+
+v1.24.0  (2026-06-24)
+- Experimental merge, abandoned.
+
 v1.23.5 (2025-08-24)
 - Fix esn error on login due to website changes
 - Fix Nonetype error on startup due to website changes
