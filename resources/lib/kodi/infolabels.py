@@ -361,12 +361,12 @@ def parse_art(videoid, item):
 
 def _assign_art(videoid, **kwargs):
     """Assign the art available from Netflix to appropriate Kodi art"""
-    poster = _best_art([kwargs['poster'], kwargs['fallback']])
+    poster   = _best_art([kwargs['poster'], kwargs['fallback']])
     wide_art = _best_art([kwargs['interesting_moment'], kwargs['boxart_large'], kwargs['boxart_small']])
-    thumb = (wide_art if videoid.mediatype in (common.VideoId.EPISODE, common.VideoId.SUPPLEMENTAL) else poster)
-    art = {'poster': poster,
-           'fanart': _best_art([kwargs['fanart'], wide_art]),
-           'thumb': thumb}
+    thumb    = (wide_art if videoid.mediatype in (common.VideoId.EPISODE, common.VideoId.SUPPLEMENTAL) else poster)
+    art      = {'poster': poster,
+                'fanart': _best_art([kwargs['fanart'], wide_art]),
+                'thumb': thumb}
     art['landscape'] = wide_art or thumb
     if videoid.mediatype != common.VideoId.UNSPECIFIED:
         art['clearlogo'] = _best_art([kwargs['clearlogo']])
@@ -434,8 +434,8 @@ def set_watched_status(list_item: ListItemW, video_data, common_data):
                 # When missing the value should be only a video of movie type,
                 # then we simulate the default Kodi playcount behaviour (playcountminimumpercent)
                 watched_threshold = video_runtime / 100 * 90
-            # To avoid asking to the server again the entire list of titles (after watched a video)
-            # to get the updated value, we override the value with the value saved in memory (see am_video_events.py)
+            # To avoid asking the server for the entire list of titles again (after watching a video)
+            # get the updated value; We override the value with the value saved in memory (see am_video_events.py)
             try:
                 bookmark_position = G.CACHE.get(CACHE_BOOKMARKS, video_id)
             except CacheMiss:
