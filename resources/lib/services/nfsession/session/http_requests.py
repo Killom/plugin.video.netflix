@@ -231,6 +231,9 @@ class SessionHTTPRequests(SessionBase):
                 data_converted += f'&{auth_data}' if data_converted else auth_data
         return data_converted, headers, params
 
+    def assert_logged_in(self):
+        pass
+
 
 def _document_url(endpoint_address, kwargs):
     if 'append_to_address' in kwargs:
