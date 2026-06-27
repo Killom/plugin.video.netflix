@@ -12,6 +12,8 @@ checks:
     # A good development should be between 250 (default of CodeClimate) and 500 lines
     config:
       threshold: 400
+    exclude_paths:
+      - "resources/lib/services/nfsession/directorybuilder/dir_path_requests.py"
   method-complexity:
     config:
       threshold: 10

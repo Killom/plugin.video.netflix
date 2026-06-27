@@ -2,51 +2,43 @@ name: Release
 on:
   push:
     tags:
-    - 'v*'
+      - 'v*'
 jobs:
   build:
-    if: github.event.base_ref == 'refs/heads/master'
     name: Publish release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build zip files
         run: |
           sudo apt-get update
-          sudo apt-get install libxml2-utils
+          sudo apt-get install -y libxml2-utils
           make build release=1
+
       - name: Get zip filename
         id: get-zip-filename
         run: |
-          echo ::set-output name=zip-filename::$(cd ..;ls plugin.video.netflix*.zip | head -1)
+          ZIP_NAME=$(cd ..; ls plugin.video.netflix*.zip | head -1)
+          echo "zip-filename=$ZIP_NAME" >> $GITHUB_OUTPUT
+
       - name: Get body
         id: get-body
         run: |
-          description=$(sed '/v[0-9\.]*\s([0-9-]*)/d;/^$/,$d' changelog.txt)
-          echo $description
-          description="${description//'%'/'%25'}"
-          description="${description//$'\n'/'%0A'}"
-          description="${description//$'\r'/'%0D'}"
-          echo ::set-output name=body::$description
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@v1
+          {
+            echo "body<<EOF"
+            sed '/v[0-9\.]*\s([0-9-]*)/d;/^$/,$d' changelog.txt
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Create Release and Upload Asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: ${{ steps.get-body.outputs.body }}
-          draft: false
-          prerelease: false
-      - name: Upload zip file
-        id: upload-zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_name: ${{ steps.get-zip-filename.outputs.zip-filename }}
-          asset_path: ../${{ steps.get-zip-filename.outputs.zip-filename }}
-          asset_content_type: application/zip
+        # GitHub CLI creates the release and attaches the file all in one go
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            "../${{ steps.get-zip-filename.outputs.zip-filename }}" \
+            --title "${{ github.ref_name }}" \
+            --notes "${{ steps.get-body.outputs.body }}"
