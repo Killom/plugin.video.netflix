@@ -7,10 +7,11 @@
     SPDX-License-Identifier: MIT
     See LICENSES/MIT.md for more information.
 """
+from urllib.parse import unquote, urlparse
+
 import xbmc
 import xbmcgui
 import xbmcplugin
-from urllib.parse import unquote, urlparse
 
 import resources.lib.common as common
 import resources.lib.kodi.ui as ui
