@@ -324,7 +324,7 @@ class DirectoryBuilder(DirectoryPathRequests):
             list_id = self.get_loco_list_id_by_context('continueWatching')
             video_list = self.req_video_list(list_id).videos if video_id else []
         except Exception as exc:  # pylint: disable=broad-except
-            _ = exc # Silence IDE warning, code seems to intentionally ignoring any exception
+            _ = exc # Silence IDE warning, code seems to be intentionally ignoring any exception
             current_list = self._video_list_from_genre_context('1592210', ('continueWatching',))
             list_id = current_list.videoid.value if getattr(current_list, 'videoid', None) else None
             video_list = current_list.videos if video_id else []

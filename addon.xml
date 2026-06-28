@@ -89,10 +89,11 @@
     <news>v1.24.1 (2026-06-27)
 - New experimental merge, personal testing done only for Pi4 @ latest OSMC
 - Should fix playback issues than can sometimes occur, like not starting at all or sound-only playback (jankofron)
-- Should fix 'Website parsing error: unable to extract reactContext.' (biocoder-frodo)
+- Should fix 'Website parsing error: unable to extract reactContext' (biocoder-frodo)
 - Fixes 'Profile switching' to profiles without pin (Krumbthi)
 - Fixes plugin no longer functional due to even more API changes by Netflix (go-vegan)
 - Fixed profile switching to a pin locked profile (AtrHusK)
+- Fixed My List (Ruud68)
     </news>
   </extension>
 </addon>

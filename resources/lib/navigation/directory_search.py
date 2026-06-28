@@ -194,16 +194,6 @@ def search_query(row_id, perpetual_range_start, dir_update_listing):
 
 def exec_query(row_id, search_type, search_params, search_value, perpetual_range_start, dir_update_listing,
                path_params=None):
-    LOG.debug("exec_query called with: %s", {
-            "row_id": row_id,
-            "search_type": search_type,
-            "search_params": search_params,
-            "search_value": search_value,
-            "perpetual_range_start": perpetual_range_start,
-            "dir_update_listing": dir_update_listing,
-            "path_params": path_params,
-    })
-
     menu_data = deepcopy(G.MAIN_MENU_ITEMS['search'])
     if search_type == 'text':
         call_args = {

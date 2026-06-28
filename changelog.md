@@ -2,7 +2,7 @@ v1.24.1 (2026-06-27)
 - New experimental merge, personal testing done only for Pi4 @ latest OSMC
 - Should fix playback issues than can sometimes occur, like not starting at all or sound-only playback (jankofron)  
   See https://github.com/CastagnaIT/plugin.video.netflix/pull/1791
-- Should fix 'Website parsing error: unable to extract reactContext.' (biocoder-frodo)  
+- Should fix 'Website parsing error: unable to extract reactContext' (biocoder-frodo)  
   See https://github.com/CastagnaIT/plugin.video.netflix/pull/1727
 - Fixes 'Profile switching' to profiles without pin (Krumbthi)  
   See https://github.com/CastagnaIT/plugin.video.netflix/pull/1783
@@ -10,6 +10,7 @@ v1.24.1 (2026-06-27)
   Using patch 8, see https://github.com/CastagnaIT/plugin.video.netflix/issues/1792  
   NB. That patch also contains the work from the others mentioned above.
 - Fixed profile switching to a pin locked profile (AtrHusK)
+- Fixed My List (Ruud68)
 - Developers: Fixed GitHub producing a release with the updated code; Added option to build a prerelease 
 
 v1.24.0  (2026-06-24)
