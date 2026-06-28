@@ -42,6 +42,7 @@ def route_search_nav(pathitems, perpetual_range_start, dir_update_listing, param
         path = pathitems[2] if len(pathitems) > 2 else 'list'
     LOG.debug('Routing "search" navigation to: {}', path)
     ret = True
+
     if path == 'list':
         search_list()
     elif path == 'add':
@@ -60,6 +61,7 @@ def route_search_nav(pathitems, perpetual_range_start, dir_update_listing, param
                          {'query': params['query']})
     else:
         ret = search_query(path, perpetual_range_start, dir_update_listing)
+
     if not ret:
         xbmcplugin.endOfDirectory(G.PLUGIN_HANDLE, succeeded=False)
 
@@ -176,7 +178,7 @@ def search_clear():
 
 @measure_exec_time_decorator()
 def search_query(row_id, perpetual_range_start, dir_update_listing):
-    """Perform the research"""
+    """Perform the search"""
     # Get item from database
     search_item = G.LOCAL_DB.get_search_item(row_id)
     if not search_item:
@@ -185,12 +187,23 @@ def search_query(row_id, perpetual_range_start, dir_update_listing):
     # Update the last access data (move on top last used items)
     if not perpetual_range_start:
         G.LOCAL_DB.update_search_item_last_access(row_id)
+
     return exec_query(row_id, search_item['Type'], search_item['Parameters'], search_item['Value'],
                       perpetual_range_start, dir_update_listing)
 
 
 def exec_query(row_id, search_type, search_params, search_value, perpetual_range_start, dir_update_listing,
                path_params=None):
+    LOG.debug("exec_query called with: %s", {
+            "row_id": row_id,
+            "search_type": search_type,
+            "search_params": search_params,
+            "search_value": search_value,
+            "perpetual_range_start": perpetual_range_start,
+            "dir_update_listing": dir_update_listing,
+            "path_params": path_params,
+    })
+
     menu_data = deepcopy(G.MAIN_MENU_ITEMS['search'])
     if search_type == 'text':
         call_args = {
