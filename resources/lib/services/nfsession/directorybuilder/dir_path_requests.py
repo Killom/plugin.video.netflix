@@ -655,6 +655,8 @@ def _normalize_browser_video_fields(path_response):
         if not isinstance(video, dict):
             continue
         item_summary = item_summaries.get(str(video_id), {})
+        if not item_summary:
+            item_summary = video.get('itemSummary', {}).get('value', {})
         if item_summary:
             video.setdefault('itemSummary', _value(item_summary))
             _set_browser_boxart(video, item_summary)
@@ -1197,20 +1199,35 @@ class DirectoryPathRequests:
         raise InvalidVideoListTypeError('No current direct My List content available')
 
     def _browser_mylist_video_list(self):
-        root_id, auth_url = self._get_current_loco_root_id()
-        list_id, row_key = self._browser_mylist_list_info(root_id, auth_url)
-        if row_key is not None:
-            try:
-                video_list = self._browser_mylist_loco_video_list(root_id, row_key, list_id, auth_url)
-            except InvalidVideoListTypeError:
-                LOG.warn('Falling back to direct My List request after LoCo row content lookup failed')
-                video_list = self._browser_mylist_direct_video_list(list_id, auth_url)
-        else:
-            video_list = self._browser_mylist_direct_video_list(list_id, auth_url)
-        for video in video_list.videos.values():
-            video.setdefault('queue', _value({}))
-            video['queue'].setdefault('value', {})['inQueue'] = True
-        return video_list
+        browse_bytes = self.nfsession.get_safe('browse')
+        api_data = self.nfsession.website_extract_session_data(browse_bytes)
+        auth_url = api_data['auth_url']
+        self.nfsession.auth_url = auth_url
+        return self._browser_mylist_path(auth_url)
+
+    def _browser_mylist_path(self, auth_url):
+        """Fetch My List via browser pathEvaluator using the mylist Falcor path"""
+        paths = [
+            ['mylist', ['id', 'listId', 'name', 'requestId', 'trackIds']],
+            ['mylist', BROWSER_LOCO_DIRECT_RANGE,
+             ['availability', 'episodeCount', 'inRemindMeList', 'itemSummary', 'queue', 'summary']]
+        ]
+        path_response = self._post_current_loco_paths(paths, auth_url)
+        mylist = path_response.get('mylist', {})
+        if not mylist:
+            raise InvalidVideoListTypeError('No mylist data in browser path response')
+        # VideoListSorted (context_id=None) expects path_response[context_name][sort_key],
+        # so wrap the mylist dict under an 'items' sub-key.
+        # iterate_references (used by resolve_refs) ignores non-numeric keys automatically,
+        # so refs and metadata atoms coexist safely in the same dict.
+        synthetic = {
+            'mylist': {
+                'items': mylist,
+                'trackIds': mylist.get('trackIds', _value({})),
+            },
+            'videos': path_response.get('videos', {})
+        }
+        return VideoListSorted(synthetic, 'mylist', None, 'items')
 
     def _browser_lolomo_video_list_by_id(self, category_name, list_id):
         self._browse_html_and_auth_url()
