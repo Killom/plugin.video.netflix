@@ -145,12 +145,13 @@ def cookie_file_path():
 
 def convert_chrome_cookie(cookie):
     """Convert a cookie from Chrome to a CookieJar format type"""
+    expires = cookie.get('expires', cookie.get('expirationDate', None))
     return {
         'name': cookie['name'],
         'value': cookie['value'],
         'domain': cookie['domain'],
-        'path': cookie['path'],
-        'secure': cookie['secure'],
-        'expires': int(cookie['expires']) if cookie['expires'] != -1 else None,
-        'rest': {'HttpOnly': True if cookie['httpOnly'] else None}
+        'path': cookie.get('path', '/'),
+        'secure': bool(cookie.get('secure', False)),
+        'expires': int(expires) if expires not in [None, -1] else None,
+        'rest': {'HttpOnly': True if cookie.get('httpOnly') else None}
     }

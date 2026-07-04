@@ -972,7 +972,19 @@ msgctxt "#30345"
 msgid "Enter PIN"
 msgstr "PIN eingeben"
 
-#. Unused 30346 to 30398
+msgctxt "#30346"
+msgid "Authentication cookie blob"
+msgstr "Authentifizierungs-Cookie-Blob"
+
+msgctxt "#30347"
+msgid "Paste a Base64 encoded JSON cookie export. Leave empty to use NFAuthentication.key files."
+msgstr "Base64-kodierten JSON-Cookie-Export einfuegen. Leer lassen, um NFAuthentication.key-Dateien zu verwenden."
+
+msgctxt "#30348"
+msgid "Authentication cookie blob imported"
+msgstr "Authentifizierungs-Cookie-Blob importiert"
+
+#. Unused 30349 to 30398
 msgctxt "#30399"
 msgid "Sort history by"
 msgstr "Verlauf sortieren nach"

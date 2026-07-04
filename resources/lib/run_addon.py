@@ -7,6 +7,7 @@
     See LICENSES/MIT.md for more information.
 """
 from functools import wraps
+from urllib.parse import parse_qsl, urlencode
 
 from xbmc import getCondVisibility, Monitor, getInfoLabel
 
@@ -244,6 +245,16 @@ def _check_service():
     return False
 
 
+def _redact_url_for_log(url):
+    """Hide sensitive query parameters before writing plugin URLs to logs."""
+    try:
+        params = parse_qsl(url.query, keep_blank_values=True)
+        params = [(key, '***' if key in ['auth_cookie_blob', 'blob'] else value) for key, value in params]
+        return url._replace(query=urlencode(params)).geturl()
+    except Exception:  # pylint: disable=broad-except
+        return str(url)
+
+
 @catch_exceptions_decorator
 def run(argv):
     # Initialize globals right away to avoid stale values from the last addon invocation.
@@ -252,7 +263,8 @@ def run(argv):
     G.init_globals(argv)
     _verify_external_call()
 
-    LOG.info('Started (version {})\nURL: {}\nFrom external call: {}', G.VERSION_RAW, G.URL, G.IS_ADDON_EXTERNAL_CALL)
+    LOG.info('Started (version {})\nURL: {}\nFrom external call: {}',
+             G.VERSION_RAW, _redact_url_for_log(G.URL), G.IS_ADDON_EXTERNAL_CALL)
 
     success = False
     if _check_service():

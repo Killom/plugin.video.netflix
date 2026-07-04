@@ -245,6 +245,26 @@ class AddonActionExecutor:
         from resources.lib.config_wizard import run_addon_configuration
         run_addon_configuration(restore=True)
 
+    def import_auth_cookie_blob(self, pathitems=None):  # pylint: disable=unused-argument
+        """Import the authentication cookie blob through an external addon call."""
+        cookie_blob = self.params.get('blob', '').strip()
+        if not cookie_blob:
+            ui.show_ok_dialog(common.get_local_string(30342), common.get_local_string(30343))
+            return
+        try:
+            from resources.lib.common.credentials import prepare_authentication_cookie_blob
+            auth_data = prepare_authentication_cookie_blob(cookie_blob)
+            cookie_names = {cookie['name'] for cookie in auth_data['cookies']}
+            missing_cookies = {'NetflixId', 'SecureNetflixId', 'nfvdid'} - cookie_names
+            if missing_cookies:
+                raise ValueError(f'Missing Netflix login cookies: {", ".join(sorted(missing_cookies))}')
+        except Exception as exc:  # pylint: disable=broad-except
+            LOG.warn('Authentication cookie blob import failed: {}', exc)
+            ui.show_ok_dialog(common.get_local_string(30342), common.get_local_string(30343))
+            return
+        G.ADDON.setSettingString('auth_cookie_blob', cookie_blob)
+        ui.show_notification(common.get_local_string(30348), time=5000)
+
     @common.inject_video_id(path_offset=1)
     def remove_watched_status(self, videoid):
         """Remove the watched status from the Netflix service"""

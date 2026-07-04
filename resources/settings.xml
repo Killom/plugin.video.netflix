@@ -29,6 +29,17 @@
                         <close>false</close>
                     </control>
                 </setting>
+                <setting id="auth_cookie_blob" type="string" label="30346" help="30347">
+                    <level>1</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string">
+                        <heading>30346</heading>
+                        <hidden>true</hidden>
+                    </control>
+                </setting>
             </group>
             <!--GROUP: Other options-->
             <group id="3" label="30015">

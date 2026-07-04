@@ -11,6 +11,7 @@
 import base64
 import json
 from datetime import datetime
+from binascii import Error as BinasciiError
 
 from resources.lib.common.exceptions import MissingCredentialsError, ErrorMsgNoReport
 from resources.lib.globals import G
@@ -126,6 +127,10 @@ def run_nf_authentication_key():
     Start operations to do the login with the authentication key file
     :return: data to send to service or None if user cancel operations or something was wrong
     """
+    data = _get_authentication_cookie_blob_data()
+    if data:
+        return data
+
     from resources.lib.kodi import ui
     file_path = ui.show_browse_dialog(get_local_string(30400) + ': NFAuthentication.key', 1, extensions='.key')
     if file_path:
@@ -139,6 +144,52 @@ def run_nf_authentication_key():
         if data and _verify_authentication_key_data(data):
             return _prepare_authentication_key_data(data)
     return None
+
+
+def _get_authentication_cookie_blob_data():
+    """Read a Base64 encoded cookie export from add-on settings."""
+    from resources.lib.kodi import ui
+    cookie_blob = G.ADDON.getSettingString('auth_cookie_blob').strip()
+    if not cookie_blob:
+        return None
+    try:
+        return prepare_authentication_cookie_blob(cookie_blob)
+    except (BinasciiError, UnicodeDecodeError, ValueError, TypeError, KeyError) as exc:
+        LOG.warn('Authentication cookie blob could not be loaded: {}', exc)
+        ui.show_ok_dialog(get_local_string(30342), get_local_string(30343))
+    return None
+
+
+def prepare_authentication_cookie_blob(cookie_blob):
+    """Decode and validate a Base64 encoded browser cookie export."""
+    blob_bytes = _decode_cookie_blob(cookie_blob)
+    blob_data = json.loads(blob_bytes.decode('utf-8'))
+    return _prepare_authentication_cookie_blob_data(blob_data)
+
+
+def _decode_cookie_blob(cookie_blob):
+    blob = ''.join(cookie_blob.split())
+    blob += '=' * (-len(blob) % 4)
+    try:
+        return base64.b64decode(blob, validate=True)
+    except BinasciiError:
+        return base64.urlsafe_b64decode(blob)
+
+
+def _prepare_authentication_cookie_blob_data(data):
+    """Normalize a cookie blob from settings to the auth data used by the service."""
+    if isinstance(data, list):
+        return _prepare_cookie_data(data)
+    if isinstance(data, dict):
+        if 'data' in data and isinstance(data['data'], dict) and 'cookies' in data['data']:
+            if 'app_name' not in data:
+                return _prepare_cookie_data(data['data']['cookies'])
+            if _verify_authentication_key_data(data):
+                return _prepare_cookie_data(data['data']['cookies'])
+            return None
+        if 'cookies' in data:
+            return _prepare_cookie_data(data['cookies'])
+    raise ValueError('Authentication cookie blob has no cookies')
 
 
 def _get_authentication_key_data(file_path, pin):
@@ -173,50 +224,52 @@ def _verify_authentication_key_data(data):
     """Verify the data structure"""
     from resources.lib.kodi import ui
     fields = ['app_name', 'app_version', 'app_system', 'app_author', 'timestamp', 'data']
-    if not all(name in fields for name in data):
+    if not all(name in fields for name in data) or not all(name in data for name in fields):
         ui.show_ok_dialog(get_local_string(30342), get_local_string(30343))
         return False
     if not data['data'] or 'cookies' not in data['data']:
         ui.show_ok_dialog(get_local_string(30342), get_local_string(30343))
         return False
-    # Check timestamp, session data is not immortal and could cause others side effects
+    # The key file timestamp is an artificial safety window from the helper
+    # tool. The actual Netflix cookies have their own expirations, so let the
+    # login flow validate them instead of forcing LibreELEC users to regenerate
+    # a browser key every few days.
     if datetime.fromtimestamp(data['timestamp']) < datetime.now():
-        ui.show_ok_dialog(get_local_string(30342), get_local_string(30344))
-        return False
+        LOG.warn('Authentication key file is expired, attempting to use its cookies anyway')
     return True
 
 
 def _prepare_authentication_key_data(data):
     """Check type of app used and prepare data for the service"""
-    from resources.lib.utils.cookies import convert_chrome_cookie
     if (data['app_name'] == 'NFAuthenticationKey' and
             data['app_system'] == 'Windows' and
             # data['app_version'] == '1.0.0.0' and
             data['app_author'] == 'CastagnaIT'):
-        result_data = {'cookies': []}
-        for cookie in data['data']['cookies']:
-            if 'netflix' not in cookie['domain']:
-                continue
-            result_data['cookies'].append(convert_chrome_cookie(cookie))
-        return result_data
+        return _prepare_cookie_data(data['data']['cookies'])
     if (data['app_name'] == 'NFAuthenticationKey' and
             data['app_system'] == 'Linux' and
             # data['app_version'] == '1.0.0' and
             data['app_author'] == 'CastagnaIT'):
-        result_data = {'cookies': []}
-        for cookie in data['data']['cookies']:
-            if 'netflix' not in cookie['domain']:
-                continue
-            result_data['cookies'].append(convert_chrome_cookie(cookie))
-        return result_data
+        return _prepare_cookie_data(data['data']['cookies'])
     if (data['app_name'] == 'NFAuthenticationKey' and
             data['app_system'] == 'MacOS' and
             # data['app_version'] == '1.0.0' and
             data['app_author'] == 'CastagnaIT'):
-        result_data = {'cookies': []}
-        for cookie in data['data']['cookies']:
-            if 'netflix' not in cookie['domain']:
-                continue
-            result_data['cookies'].append(convert_chrome_cookie(cookie))
-        return result_data
+        return _prepare_cookie_data(data['data']['cookies'])
     raise ErrorMsgNoReport('Authentication key file not supported')
+
+
+def _prepare_cookie_data(cookies):
+    """Filter and convert a browser cookie export to the service auth format."""
+    from resources.lib.utils.cookies import convert_chrome_cookie
+    result_data = {'cookies': []}
+    for cookie in cookies:
+        domain = cookie.get('domain') or cookie.get('host') or ''
+        if 'netflix' not in domain:
+            continue
+        cookie = dict(cookie)
+        cookie['domain'] = domain
+        result_data['cookies'].append(convert_chrome_cookie(cookie))
+    if not result_data['cookies']:
+        raise ValueError('Authentication cookie blob has no Netflix cookies')
+    return result_data
