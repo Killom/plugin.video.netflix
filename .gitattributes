@@ -1,5 +1,6 @@
 .github/ export-ignore
 docs/ export-ignore
+tools/ export-ignore
 LICENSES/ export-ignore
 tests/ export-ignore
 .codeclimate.yml export-ignore
