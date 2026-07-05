@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     name: Kodi addon checker
     steps:
-    - name: Remove non-addon files
-      run: rm -rf tools/
     - name: Checkout
       uses: actions/checkout@v4
     - name: Kodi addon checker validation
